@@ -2,9 +2,7 @@ package de.supercode.eCommerce.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -18,6 +16,8 @@ public class CustomerDto {
     private String lastName;
     @Email(message = "Email is not valid", regexp = ".+@.+\\..+")
     private String email;
+    @Past
+    @NotNull
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate birthday;
     @NotBlank

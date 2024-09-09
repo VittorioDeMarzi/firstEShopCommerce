@@ -8,8 +8,13 @@ import jakarta.validation.ConstraintDeclarationException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/customers")
@@ -32,7 +37,31 @@ public class CustomerController {
         }
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
+    public Map<String, String> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getConstraintViolations().forEach(violation -> {
+            String fieldName = violation.getPropertyPath().toString();
+            String errorMessage = violation.getMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String,String> handleValidationError(MethodArgumentNotValidException ex){
+        Map<String,String> errorMap = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error ->{
+            String fieldName = ((FieldError)error).getField();
+            String message = error.getDefaultMessage();
+
+            errorMap.put(fieldName, message);
+        });
+
+        return errorMap;
+    }
 
     // find all customers
 

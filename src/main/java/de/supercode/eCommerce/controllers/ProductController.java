@@ -4,10 +4,16 @@ import de.supercode.eCommerce.dtos.ProductDto;
 import de.supercode.eCommerce.entities.product.Product;
 import de.supercode.eCommerce.errors.ApiError;
 import de.supercode.eCommerce.servicies.ProductService;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -22,13 +28,39 @@ public class ProductController {
 
     // save new Product
     @PostMapping
-    public ResponseEntity<?> saveNewProduct(@RequestBody ProductDto productDto) {
+    public ResponseEntity<?> saveNewProduct(@Validated @RequestBody ProductDto productDto) {
         try {
             Product newProduct = productService.saveNewProduct(productDto);
             return new ResponseEntity<>(newProduct, HttpStatus.CREATED);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ApiError(HttpStatus.BAD_REQUEST, "Article already in DataBase"), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Map<String, String> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getConstraintViolations().forEach(violation -> {
+            String fieldName = violation.getPropertyPath().toString();
+            String errorMessage = violation.getMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String,String> handleValidationError(MethodArgumentNotValidException ex){
+        Map<String,String> errorMap = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error ->{
+            String fieldName = ((FieldError)error).getField();
+            String message = error.getDefaultMessage();
+
+            errorMap.put(fieldName, message);
+        });
+
+        return errorMap;
     }
 
     // find all products

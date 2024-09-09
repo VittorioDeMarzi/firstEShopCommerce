@@ -35,7 +35,15 @@ public class BasketController {
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
 
-
+    @PutMapping
+    public ResponseEntity<?> updateBasketByCustomerId(@RequestBody addProductToBasketDto dto) {
+        try {
+            basketService.addProductToBasket(dto);
+            return ResponseEntity.ok("Product added to basket successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 }
